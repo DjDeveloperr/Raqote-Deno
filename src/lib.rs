@@ -175,6 +175,7 @@ pub fn deno_plugin_init(interface: &mut dyn Interface) {
     interface.register_op("op_dt_fill", op_dt_fill);
     interface.register_op("op_dt_stroke", op_dt_stroke);
     interface.register_op("op_dt_encode", op_dt_encode);
+    interface.register_op("op_dt_destroy", op_dt_destroy);
     interface.register_op("op_dt_draw_image_at", op_dt_draw_image_at);
     interface.register_op("op_dt_draw_image_with_size_at", op_dt_draw_image_with_size_at);
 }
@@ -353,6 +354,20 @@ fn op_new_draw_target(
             let res = b"0";
             Op::Sync(res.to_vec().into_boxed_slice())   
         }
+    })
+}
+
+fn op_dt_destroy(
+    _interface: &mut dyn Interface,
+    _args: &mut [ZeroCopyBuf],
+) -> Op {
+    let id: u32 = get_arg_u32(_args, 0).unwrap();
+    TARGETS.with(|map| {
+        if let Some(_target) = map.borrow_mut().get_mut(&id) {
+            map.borrow_mut().remove(&id);
+            let res= b"0"; 
+            Op::Sync(res.to_vec().into_boxed_slice())
+        } else { let res= b"1"; Op::Sync(res.to_vec().into_boxed_slice()) }
     })
 }
 

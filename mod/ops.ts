@@ -14,6 +14,7 @@ export const {
     op_dt_encode,
     op_dt_draw_image_at,
     op_dt_draw_image_with_size_at,
+    op_dt_destroy,
 } = (Deno as any).core.ops() as { [name: string]: number };
 
 export const encoder = new TextEncoder();
@@ -87,6 +88,11 @@ export function dt_stroke(id: number, path: PathData, stroke: StrokeStyle, src: 
 
 export function dt_clear(id: number, a: number, r: number, g: number, b: number) {
     let res = dispatch_data(op_dt_clear, id, a, r, g, b);
+    return res == "0";
+}
+
+export function dt_destroy(id: number) {
+    let res = dispatch_data(op_dt_destroy, id);
     return res == "0";
 }
 
