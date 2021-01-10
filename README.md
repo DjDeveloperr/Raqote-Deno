@@ -1,7 +1,8 @@
 ﻿# Raqote Deno
 
 This module has [Raqote](https://github.com/jrmuizel/raqote) (a 2D graphics library for Rust) bindings for Deno using (unstable) Plugin API.
-I'm mainly creating this to provide a native-way to provide a Canvas API in Deno.
+
+I'm actually working on this to provide a native-way to create a Canvas API in Deno.
 
 ## Getting started
 
