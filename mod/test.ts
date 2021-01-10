@@ -45,5 +45,4 @@ dt2.fillRect(0, 0, 100, 100, Source.Solid(new Color(0xff, 0xff, 0, 0)));
 dt2.writePNG("hello.png");
 dt.drawImageAt(10, 10, Image.open("hello.png"));
 dt.drawImageWithSizeAt(120, 120, 200, 200, Image.open("hello.png"));
-
 dt.writePNG("example.png");

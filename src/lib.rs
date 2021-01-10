@@ -5,7 +5,9 @@ use deno_core::{ZeroCopyBuf, Op};
 use std::str::FromStr;
 use std::cell::RefCell;
 use deno_core::serde::Deserialize;
-use image::GenericImageView;
+use image::{GenericImageView};
+use std::io::Read;
+use std::env::temp_dir;
 
 thread_local! {
     static TARGETS: RefCell<HashMap<u32, DrawTarget>> = RefCell::new(HashMap::new());
@@ -172,6 +174,7 @@ pub fn deno_plugin_init(interface: &mut dyn Interface) {
     interface.register_op("op_dt_width", op_dt_width);
     interface.register_op("op_dt_fill", op_dt_fill);
     interface.register_op("op_dt_stroke", op_dt_stroke);
+    interface.register_op("op_dt_encode", op_dt_encode);
     interface.register_op("op_dt_draw_image_at", op_dt_draw_image_at);
     interface.register_op("op_dt_draw_image_with_size_at", op_dt_draw_image_with_size_at);
 }
@@ -385,6 +388,26 @@ fn op_dt_height(
     TARGETS.with(|map| {
         if let Some(target) = map.borrow_mut().get_mut(&id) {
             Op::Sync(target.height().to_string().as_bytes().to_vec().into_boxed_slice())
+        } else { let res= b"n"; Op::Sync(res.to_vec().into_boxed_slice()) }
+    })
+}
+
+fn op_dt_encode(
+    _interface: &mut dyn Interface,
+    _args: &mut [ZeroCopyBuf],
+) -> Op {
+    let id: u32 = get_arg_u32(_args, 0).unwrap();
+    TARGETS.with(|map| {
+        if let Some(target) = map.borrow_mut().get_mut(&id) {
+            let tmp = temp_dir().to_str().unwrap().to_owned();
+            let file_name = format!("{}.png", uuid::Uuid::new_v4());
+            let path = tmp + &file_name;
+            target.write_png(&path).unwrap();
+            let mut buf = Vec::<u8>::new();
+            let mut file = std::fs::File::open(&path).unwrap();
+            file.read_to_end(&mut buf).unwrap();
+            std::fs::remove_file(&path).unwrap();
+            Op::Sync(buf.into_boxed_slice())
         } else { let res= b"n"; Op::Sync(res.to_vec().into_boxed_slice()) }
     })
 }

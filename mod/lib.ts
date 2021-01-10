@@ -1,4 +1,4 @@
-import { dispatch, draw_image_at, draw_image_with_size_at, dt_fill, dt_fill_rect, dt_get_data, dt_stroke, dt_write_png, new_draw_target } from "./ops.ts";
+import { draw_image_at, draw_image_with_size_at, dt_encode, dt_fill, dt_fill_rect, dt_get_data, dt_stroke, dt_write_png, new_draw_target } from "./ops.ts";
 import { ISource, PathData, StrokeStyle, Path, GradientStop, Spread } from "./types.ts";
 
 const DRAW_TARGETS = new Set<number>();
@@ -59,6 +59,12 @@ export class DrawTarget {
     writePNG(path: string): DrawTarget {
         if(!dt_write_png(this.id, path)) throw new Error("Failed to writePNG");
         return this;
+    }
+
+    encodePNG(): Uint8Array {
+        const res = dt_encode(this.id);
+        if(!res) throw new Error("Failed to encodePNG");
+        return res;
     }
 }
 

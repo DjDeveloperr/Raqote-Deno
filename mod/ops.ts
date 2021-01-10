@@ -11,6 +11,7 @@ export const {
     op_dt_clear,
     op_dt_height,
     op_dt_width,
+    op_dt_encode,
     op_dt_draw_image_at,
     op_dt_draw_image_with_size_at,
 } = (Deno as any).core.ops() as { [name: string]: number };
@@ -93,6 +94,12 @@ export function dt_height(id: number): void | number {
     let res = dispatch_data(op_dt_height, id);
     if (res == "n") return;
     else return Number(res);
+}
+
+export function dt_encode(id: number): void | Uint8Array {
+    let res = dispatch(op_dt_encode, id);
+    if (res.length == 0 && decoder.decode(res) == "n") return;
+    else return res;
 }
 
 export function dt_width(id: number): void | number {
