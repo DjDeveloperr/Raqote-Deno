@@ -1,9 +1,10 @@
 ﻿# Raqote Deno
 
-This module has [Raqote](https://github.com/jrmuizel/raqote), a 2D graphics library for Rust, bindings for Deno using (unstable) Plugin API.
+This module has [Raqote](https://github.com/jrmuizel/raqote) (a 2D graphics library for Rust) bindings for Deno using (unstable) Plugin API.
 I'm mainly creating this to provide a native-way to provide a Canvas API in Deno.
 
 ## Getting started
+
 ```ts
 const dt = new DrawTarget(400, 400);
 const gradient = Source.createRadialGradient(
@@ -42,6 +43,9 @@ dt.stroke(
 );
 dt.writePNG("example.png");
 ```
+
+(Yes this is the same example from Raqote README but in TS :p)
+
 ## Contributing
 
 You're always welcome to contribute!
