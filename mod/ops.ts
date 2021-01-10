@@ -101,10 +101,10 @@ export function dt_width(id: number): void | number {
     else return Number(res);
 }
 
-export function draw_image_at(id: number, img: Uint8Array, x: number, y: number, w: number, h: number): boolean {
-    return dispatch_data(op_dt_draw_image_at, id, img, x, y, w, h) == "0";
+export function draw_image_at(id: number, img: Uint8Array, x: number, y: number): boolean {
+    return dispatch_data(op_dt_draw_image_at, id, img, x, y) == "0";
 }
 
-export function draw_image_with_size_at(id: number, img: Uint8Array, x: number, y: number, sw: number, sh: number, w: number, h: number): boolean {
-    return dispatch_data(op_dt_draw_image_with_size_at, id, img, x, y, sw, sh, w, h) == "0";
+export function draw_image_with_size_at(id: number, img: Uint8Array, x: number, y: number, w: number, h: number): boolean {
+    return dispatch_data(op_dt_draw_image_with_size_at, id, img, x, y, w, h) == "0";
 }

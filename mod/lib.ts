@@ -1,4 +1,4 @@
-import { dt_fill, dt_fill_rect, dt_get_data, dt_stroke, dt_write_png, new_draw_target } from "./ops.ts";
+import { dispatch, draw_image_at, draw_image_with_size_at, dt_fill, dt_fill_rect, dt_get_data, dt_stroke, dt_write_png, new_draw_target } from "./ops.ts";
 import { ISource, PathData, StrokeStyle, Path, GradientStop, Spread } from "./types.ts";
 
 const DRAW_TARGETS = new Set<number>();
@@ -46,9 +46,31 @@ export class DrawTarget {
         return this;
     }
 
+    drawImageAt(x: number, y: number, img: Image | Uint8Array): DrawTarget {
+        if(!draw_image_at(this.id, img instanceof Uint8Array ? img : img.data, x, y)) throw new Error("Failed to drawImageAt");
+        return this;
+    }
+
+    drawImageWithSizeAt(x: number, y: number, w: number, h: number, img: Image | Uint8Array): DrawTarget {
+        if(!draw_image_with_size_at(this.id, img instanceof Uint8Array ? img : img.data, w, h, x, y)) throw new Error("Failed to drawImageWithSizeAt");
+        return this;
+    }
+
     writePNG(path: string): DrawTarget {
         if(!dt_write_png(this.id, path)) throw new Error("Failed to writePNG");
         return this;
+    }
+}
+
+export class Image {
+    data: Uint8Array
+
+    constructor(data: Uint8Array) {
+        this.data = data;
+    }
+
+    static open(path: string) {
+        return new Image(Deno.readFileSync(path));
     }
 }
 

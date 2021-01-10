@@ -5,6 +5,7 @@ use deno_core::{ZeroCopyBuf, Op};
 use std::str::FromStr;
 use std::cell::RefCell;
 use deno_core::serde::Deserialize;
+use image::GenericImageView;
 
 thread_local! {
     static TARGETS: RefCell<HashMap<u32, DrawTarget>> = RefCell::new(HashMap::new());
@@ -185,17 +186,25 @@ fn get_arg_str(args: &mut [ZeroCopyBuf], idx: usize) -> Result<&str, &str> {
     }
 }
 
-fn get_arg_img(args: &mut [ZeroCopyBuf], idx: usize) -> Result<Box<[u32]>, &str> {
+struct JsonImage {
+    width: u32,
+    height: u32,
+    data: Box<[u32]>
+}
+
+fn get_arg_img(args: &mut [ZeroCopyBuf], idx: usize) -> Result<JsonImage, &str> {
     let res = args.get(idx);
     if res.is_none() {
         Err("not found")
     } else {
         let vec = res.unwrap();
         let mut res = Vec::<u32>::new();
-        for e in &vec[..] {
-            res.push(*e as u32);
+        let dec = image::load_from_memory(vec.as_ref()).unwrap();
+        for c in dec.as_rgba8().unwrap().as_raw().chunks(4) {
+            // (A << 24) | (R << 16) | (G << 8) | B
+            res.push((((c[3] as u32) << 24) | ((c[0] as u32) << 16) | ((c[1] as u32) << 8) | (c[2] as u32)) as u32);
         }
-        Ok(res.into_boxed_slice())
+        Ok(JsonImage { data: res.into_boxed_slice(), width: dec.width(), height: dec.height() })
     }
 }
 
@@ -476,14 +485,13 @@ fn op_dt_draw_image_at(
     let id = get_arg_u32(_args, 0).unwrap();
     let x = get_arg_f32(_args, 2).unwrap();
     let y = get_arg_f32(_args, 3).unwrap();
-    let w = get_arg_i32(_args, 4).unwrap();
-    let h = get_arg_i32(_args, 5).unwrap();
     TARGETS.with(|map| {
         if let Some(target) = map.borrow_mut().get_mut(&id) {
+            let img = get_arg_img(_args, 1).unwrap();
             target.draw_image_at(x, y, &Image {
-                width: w,
-                height: h,
-                data: &*get_arg_img(_args, 1).unwrap()
+                width: img.width as i32,
+                height: img.height as i32,
+                data: &*img.data
             }, &DrawOptions::new());
             let res= b"0";
             Op::Sync(res.to_vec().into_boxed_slice())
@@ -498,16 +506,15 @@ fn op_dt_draw_image_with_size_at(
     let id = get_arg_u32(_args, 0).unwrap();
     let x = get_arg_f32(_args, 2).unwrap();
     let y = get_arg_f32(_args, 3).unwrap();
-    let sw = get_arg_f32(_args, 4).unwrap();
-    let sh = get_arg_f32(_args, 5).unwrap();
-    let w = get_arg_i32(_args, 6).unwrap();
-    let h = get_arg_i32(_args, 7).unwrap();
+    let w = get_arg_f32(_args, 4).unwrap();
+    let h = get_arg_f32(_args, 5).unwrap();
     TARGETS.with(|map| {
         if let Some(target) = map.borrow_mut().get_mut(&id) {
-            target.draw_image_with_size_at(x, y, sw, sh, &Image {
-                width: w,
-                height: h,
-                data: &*get_arg_img(_args, 1).unwrap()
+            let img = get_arg_img(_args, 1).unwrap();
+            target.draw_image_with_size_at(x, y, w, h, &Image {
+                width: img.width as i32,
+                height: img.height as i32,
+                data: &*img.data
             }, &DrawOptions::new());
             let res= b"0";
             Op::Sync(res.to_vec().into_boxed_slice())

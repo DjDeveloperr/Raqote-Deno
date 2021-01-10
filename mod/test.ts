@@ -1,4 +1,4 @@
-import { Color, DrawTarget, Gradient, PathBuilder, Point, Source } from "./lib.ts";
+import { Color, DrawTarget, Gradient, Image, PathBuilder, Point, Source } from "./lib.ts";
 import { LineCap, LineJoin, Spread } from "./types.ts";
 
 const dt = new DrawTarget(400, 400);
@@ -39,5 +39,11 @@ dt.stroke(
     },
     Source.Solid(new Color(0x80, 0x0, 0x0, 0x80))
 );
+
+const dt2 = new DrawTarget(100, 100);
+dt2.fillRect(0, 0, 100, 100, Source.Solid(new Color(0xff, 0xff, 0, 0)));
+dt2.writePNG("hello.png");
+dt.drawImageAt(10, 10, Image.open("hello.png"));
+dt.drawImageWithSizeAt(120, 120, 200, 200, Image.open("hello.png"));
 
 dt.writePNG("example.png");
