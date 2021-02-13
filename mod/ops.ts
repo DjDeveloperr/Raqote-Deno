@@ -15,6 +15,7 @@ export const {
   op_dt_draw_image_at,
   op_dt_draw_image_with_size_at,
   op_dt_destroy,
+  op_dt_set_transform,
 } = (Deno as any).core.ops() as { [name: string]: number };
 
 export const encoder = new TextEncoder();
@@ -165,5 +166,21 @@ export function draw_image_with_size_at(
 ): boolean {
   return (
     dispatch_data(op_dt_draw_image_with_size_at, id, img, x, y, w, h) == "0"
+  );
+}
+
+export function dt_set_transform(
+  id: number,
+  rc: number,
+  m11: number,
+  m21: number,
+  m31: number,
+  m12: number,
+  m22: number,
+  m32: number
+) {
+  return (
+    dispatch_data(op_dt_set_transform, id, rc, m11, m21, m31, m12, m22, m32) ==
+    "0"
   );
 }

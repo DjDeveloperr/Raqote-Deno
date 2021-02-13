@@ -1,4 +1,5 @@
 import {
+  Angle,
   Color,
   DrawTarget,
   Gradient,
@@ -6,10 +7,12 @@ import {
   PathBuilder,
   Point,
   Source,
+  Transform,
 } from "./lib.ts";
 import { LineCap, LineJoin, Spread } from "./types.ts";
 
 const dt = new DrawTarget(400, 400);
+dt.setTransform(Transform.createRotation(Angle.degrees(10)));
 
 const gradient = Source.createRadialGradient(
   new Gradient()

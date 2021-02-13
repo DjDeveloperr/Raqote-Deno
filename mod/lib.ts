@@ -6,6 +6,7 @@ import {
   dt_fill,
   dt_fill_rect,
   dt_get_data,
+  dt_set_transform,
   dt_stroke,
   dt_write_png,
   new_draw_target,
@@ -120,6 +121,12 @@ export class DrawTarget {
     const done = dt_destroy(this.id);
     if (done) DRAW_TARGETS.delete(this.id);
     return done;
+  }
+
+  setTransform(transform: Transform): DrawTarget {
+    const done = dt_set_transform(this.id, ...transform.data);
+    if (!done) throw new Error("Failed to setTransform");
+    return this;
   }
 }
 
@@ -260,5 +267,86 @@ export class Gradient {
   addStop(position: number, color: Color) {
     this.stops.push({ position, color });
     return this;
+  }
+}
+
+export enum AngleType {
+  Degrees,
+  Radians,
+}
+
+export class Angle {
+  type: AngleType;
+  val: number;
+
+  constructor(type: AngleType, val: number) {
+    this.type = type;
+    this.val = val;
+  }
+
+  static degrees(val: number) {
+    return new Angle(AngleType.Degrees, val);
+  }
+
+  static radians(val: number) {
+    return new Angle(AngleType.Radians, val);
+  }
+}
+
+export class Transform {
+  data: [
+    rc: number,
+    m11: number,
+    m21: number,
+    m31: number,
+    m12: number,
+    m22: number,
+    m32: number
+  ] = [0, 0, 0, 0, 0, 0, 0];
+
+  constructor(
+    rc: number,
+    m11: number,
+    m21: number,
+    m31: number,
+    m12: number,
+    m22: number,
+    m32: number
+  ) {
+    this.data = [rc, m11, m21, m31, m12, m22, m32];
+  }
+
+  static columnMajor(
+    m11: number,
+    m21: number,
+    m31: number,
+    m12: number,
+    m22: number,
+    m32: number
+  ) {
+    return new Transform(0, m11, m21, m31, m12, m22, m32);
+  }
+
+  static rowMajor(
+    m11: number,
+    m21: number,
+    m31: number,
+    m12: number,
+    m22: number,
+    m32: number
+  ) {
+    return new Transform(1, m11, m21, m31, m12, m22, m32);
+  }
+
+  static createScale(x: number, y: number) {
+    return new Transform(2, x, y, 0, 0, 0, 0);
+  }
+
+  static createTranslation(x: number, y: number) {
+    return new Transform(3, x, y, 0, 0, 0, 0);
+  }
+
+  static createRotation(angle: Angle) {
+    return new Transform(4, angle.type.valueOf(), angle.val, 0, 0, 0, 0);
   }
 }

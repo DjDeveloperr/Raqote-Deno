@@ -1,4 +1,4 @@
-use raqote::{DrawTarget, Source, DrawOptions, SolidSource, Color, Image, Path, PathBuilder, Gradient, Spread, Point, GradientStop, StrokeStyle, LineCap, LineJoin};
+use raqote::{DrawTarget, Source, DrawOptions, SolidSource, Color, Image, Path, PathBuilder, Gradient, Spread, Point, GradientStop, StrokeStyle, LineCap, LineJoin, Transform};
 use std::collections::HashMap;
 use deno_core::plugin_api::Interface;
 use deno_core::{ZeroCopyBuf, Op};
@@ -177,6 +177,7 @@ pub fn deno_plugin_init(interface: &mut dyn Interface) {
     interface.register_op("op_dt_encode", op_dt_encode);
     interface.register_op("op_dt_destroy", op_dt_destroy);
     interface.register_op("op_dt_draw_image_at", op_dt_draw_image_at);
+    interface.register_op("op_dt_set_transform", op_dt_set_transform);
     interface.register_op("op_dt_draw_image_with_size_at", op_dt_draw_image_with_size_at);
 }
 
@@ -262,8 +263,6 @@ fn get_arg_src(args: &mut [ZeroCopyBuf], idx: usize) -> Result<Source, &str> {
         let val = res.unwrap();
         let json_res = deno_core::serde_json::from_str(val);
         if json_res.is_err() {
-            println!("src_json: {}", val);
-            eprintln!(" err_msg: {}", json_res.err().unwrap().to_string());
             Err("failed to parse json")
         } else {
             let json: JsonSource = json_res.unwrap();
@@ -555,6 +554,34 @@ fn op_dt_draw_image_with_size_at(
                 data: &*img.data
             }, &DrawOptions::new());
             let res= b"0";
+            Op::Sync(res.to_vec().into_boxed_slice())
+        } else { let res= b"1"; Op::Sync(res.to_vec().into_boxed_slice()) }
+    })
+}
+
+fn op_dt_set_transform(
+    _interface: &mut dyn Interface,
+    _args: &mut [ZeroCopyBuf],
+) -> Op {
+    let id = get_arg_u32(_args, 0).unwrap();
+    let rc = get_arg_u8(_args, 1).unwrap();
+    let m11 = get_arg_f32(_args, 2).unwrap();
+    let m21 = get_arg_f32(_args, 3).unwrap();
+    let m31 = get_arg_f32(_args, 4).unwrap();
+    let m12 = get_arg_f32(_args, 5).unwrap();
+    let m22 = get_arg_f32(_args, 6).unwrap();
+    let m32 = get_arg_f32(_args, 7).unwrap();
+    TARGETS.with(|map| {
+        if let Some(target) = map.borrow_mut().get_mut(&id) {
+            let mut res= b"0";
+            if rc == 0 { target.set_transform(&Transform::column_major(m11, m21, m31, m12, m22, m32)); }
+            else if rc == 1 { target.set_transform(&Transform::row_major(m11, m21, m31, m12, m22, m32)); }
+            else if rc == 2 { target.set_transform(&Transform::create_scale(m11, m21)); }
+            else if rc == 3 { target.set_transform(&Transform::create_translation(m11, m21)); }
+            else if rc == 4 {
+                let angle = if m11 == 0.0 { euclid::Angle::degrees(m21) } else { euclid::Angle::radians(m21) };
+                target.set_transform(&Transform::create_rotation(angle));
+            } else { res = b"1"; }
             Op::Sync(res.to_vec().into_boxed_slice())
         } else { let res= b"1"; Op::Sync(res.to_vec().into_boxed_slice()) }
     })
