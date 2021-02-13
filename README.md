@@ -2,8 +2,6 @@
 
 This module has [Raqote](https://github.com/jrmuizel/raqote) (a 2D graphics library for Rust) bindings for Deno using (unstable) Plugin API.
 
-I'm actually working on this to provide a native-way to create a Canvas API in Deno.
-
 ## Getting started
 
 ```ts
@@ -50,6 +48,8 @@ dt.writePNG("example.png");
 ## Contributing
 
 You're always welcome to contribute!
+
+- We use `deno fmt` to format the files.
 
 ## License
 
