@@ -1,4 +1,4 @@
-use raqote::{DrawTarget, Source, DrawOptions, SolidSource, Color, Image, Path, PathBuilder, Gradient, Spread, Point, GradientStop, StrokeStyle, LineCap, LineJoin, Transform};
+use raqote::{DrawTarget, Source, DrawOptions, SolidSource, Color, Image, Path, PathBuilder, Gradient, Spread, Point, GradientStop, StrokeStyle, LineCap, LineJoin, Transform, IntRect, BlendMode};
 use std::collections::HashMap;
 use deno_core::plugin_api::Interface;
 use deno_core::{ZeroCopyBuf, Op};
@@ -8,6 +8,7 @@ use deno_core::serde::Deserialize;
 use image::{GenericImageView};
 use std::io::Read;
 use std::env::temp_dir;
+use euclid::{Point2D, UnknownUnit};
 
 thread_local! {
     static TARGETS: RefCell<HashMap<u32, DrawTarget>> = RefCell::new(HashMap::new());
@@ -163,6 +164,71 @@ fn point_from_json(v: [f32; 2]) -> Point {
     Point::new(v[0], v[1])
 }
 
+#[derive(Deserialize)]
+enum JsonBlendMode {
+    Dst,
+    Src,
+    Clear,
+    SrcOver,
+    DstOver,
+    SrcIn,
+    DstIn,
+    SrcOut,
+    DstOut,
+    SrcAtop,
+    DstAtop,
+    Xor,
+    Add,
+    Screen,
+    Overlay,
+    Darken,
+    Lighten,
+    ColorDodge,
+    ColorBurn,
+    HardLight,
+    SoftLight,
+    Difference,
+    Exclusion,
+    Multiply,
+    Hue,
+    Saturation,
+    Color,
+    Luminosity,
+}
+
+fn blend_from_json(json: JsonBlendMode) -> BlendMode {
+    match json {
+        JsonBlendMode::Dst => { BlendMode::Dst }
+        JsonBlendMode::Src => { BlendMode::Src }
+        JsonBlendMode::Clear => { BlendMode::Clear }
+        JsonBlendMode::SrcOver => { BlendMode::SrcOver }
+        JsonBlendMode::DstOver => { BlendMode::DstOver }
+        JsonBlendMode::SrcIn => { BlendMode::SrcIn }
+        JsonBlendMode::DstIn => { BlendMode::DstIn }
+        JsonBlendMode::SrcOut => { BlendMode::SrcOut }
+        JsonBlendMode::DstOut => { BlendMode::DstOut }
+        JsonBlendMode::SrcAtop => { BlendMode::SrcAtop }
+        JsonBlendMode::DstAtop => { BlendMode::DstAtop }
+        JsonBlendMode::Xor => { BlendMode::Xor }
+        JsonBlendMode::Add => { BlendMode::Add }
+        JsonBlendMode::Screen => { BlendMode::Screen }
+        JsonBlendMode::Overlay => { BlendMode::Overlay }
+        JsonBlendMode::Darken => { BlendMode::Darken }
+        JsonBlendMode::Lighten => { BlendMode::Lighten }
+        JsonBlendMode::ColorDodge => { BlendMode::ColorDodge }
+        JsonBlendMode::ColorBurn => { BlendMode::ColorBurn }
+        JsonBlendMode::HardLight => { BlendMode::HardLight }
+        JsonBlendMode::SoftLight => { BlendMode::SoftLight }
+        JsonBlendMode::Difference => { BlendMode::Difference }
+        JsonBlendMode::Exclusion => { BlendMode::Exclusion }
+        JsonBlendMode::Multiply => { BlendMode::Multiply }
+        JsonBlendMode::Hue => { BlendMode::Hue }
+        JsonBlendMode::Saturation => { BlendMode::Saturation }
+        JsonBlendMode::Color => { BlendMode::Color }
+        JsonBlendMode::Luminosity => { BlendMode::Luminosity }
+    }
+}
+
 #[no_mangle]
 pub fn deno_plugin_init(interface: &mut dyn Interface) {
     interface.register_op("op_new_draw_target", op_new_draw_target);
@@ -179,6 +245,12 @@ pub fn deno_plugin_init(interface: &mut dyn Interface) {
     interface.register_op("op_dt_draw_image_at", op_dt_draw_image_at);
     interface.register_op("op_dt_set_transform", op_dt_set_transform);
     interface.register_op("op_dt_draw_image_with_size_at", op_dt_draw_image_with_size_at);
+    interface.register_op("op_dt_push_clip_rect", op_dt_push_clip_rect);
+    interface.register_op("op_dt_push_clip", op_dt_push_clip);
+    interface.register_op("op_dt_pop_clip", op_dt_pop_clip);
+    interface.register_op("op_dt_pop_layer", op_dt_pop_layer);
+    interface.register_op("op_dt_push_layer", op_dt_push_layer);
+    interface.register_op("op_dt_push_layer_with_blend", op_dt_push_layer_with_blend);
 }
 
 fn get_arg_str(args: &mut [ZeroCopyBuf], idx: usize) -> Result<&str, &str> {
@@ -582,6 +654,98 @@ fn op_dt_set_transform(
                 let angle = if m11 == 0.0 { euclid::Angle::degrees(m21) } else { euclid::Angle::radians(m21) };
                 target.set_transform(&Transform::create_rotation(angle));
             } else { res = b"1"; }
+            Op::Sync(res.to_vec().into_boxed_slice())
+        } else { let res= b"1"; Op::Sync(res.to_vec().into_boxed_slice()) }
+    })
+}
+
+fn op_dt_push_clip_rect(
+    _interface: &mut dyn Interface,
+    _args: &mut [ZeroCopyBuf],
+) -> Op {
+    let id = get_arg_u32(_args, 0).unwrap();
+    let x1 = get_arg_i32(_args, 1).unwrap();
+    let y1 = get_arg_i32(_args, 2).unwrap();
+    let x2 = get_arg_i32(_args, 3).unwrap();
+    let y2 = get_arg_i32(_args, 4).unwrap();
+    TARGETS.with(|map| {
+        if let Some(target) = map.borrow_mut().get_mut(&id) {
+            target.push_clip_rect(IntRect::new(Point2D::<i32, UnknownUnit>::new(x1, y1), Point2D::<i32, UnknownUnit>::new(x2, y2)));
+            let res= b"0";
+            Op::Sync(res.to_vec().into_boxed_slice())
+        } else { let res= b"1"; Op::Sync(res.to_vec().into_boxed_slice()) }
+    })
+}
+
+fn op_dt_push_clip(
+    _interface: &mut dyn Interface,
+    _args: &mut [ZeroCopyBuf],
+) -> Op {
+    let id = get_arg_u32(_args, 0).unwrap();
+    let path = get_arg_path(_args, 1).unwrap();
+    TARGETS.with(|map| {
+        if let Some(target) = map.borrow_mut().get_mut(&id) {
+            target.push_clip(&path);
+            let res= b"0";
+            Op::Sync(res.to_vec().into_boxed_slice())
+        } else { let res= b"1"; Op::Sync(res.to_vec().into_boxed_slice()) }
+    })
+}
+
+fn op_dt_pop_clip(
+    _interface: &mut dyn Interface,
+    _args: &mut [ZeroCopyBuf],
+) -> Op {
+    let id = get_arg_u32(_args, 0).unwrap();
+    TARGETS.with(|map| {
+        if let Some(target) = map.borrow_mut().get_mut(&id) {
+            target.pop_clip();
+            let res= b"0";
+            Op::Sync(res.to_vec().into_boxed_slice())
+        } else { let res= b"1"; Op::Sync(res.to_vec().into_boxed_slice()) }
+    })
+}
+
+fn op_dt_pop_layer(
+    _interface: &mut dyn Interface,
+    _args: &mut [ZeroCopyBuf],
+) -> Op {
+    let id = get_arg_u32(_args, 0).unwrap();
+    TARGETS.with(|map| {
+        if let Some(target) = map.borrow_mut().get_mut(&id) {
+            target.pop_layer();
+            let res= b"0";
+            Op::Sync(res.to_vec().into_boxed_slice())
+        } else { let res= b"1"; Op::Sync(res.to_vec().into_boxed_slice()) }
+    })
+}
+
+fn op_dt_push_layer(
+    _interface: &mut dyn Interface,
+    _args: &mut [ZeroCopyBuf],
+) -> Op {
+    let id = get_arg_u32(_args, 0).unwrap();
+    let opacity = get_arg_f32(_args, 1).unwrap();
+    TARGETS.with(|map| {
+        if let Some(target) = map.borrow_mut().get_mut(&id) {
+            target.push_layer(opacity);
+            let res= b"0";
+            Op::Sync(res.to_vec().into_boxed_slice())
+        } else { let res= b"1"; Op::Sync(res.to_vec().into_boxed_slice()) }
+    })
+}
+
+fn op_dt_push_layer_with_blend(
+    _interface: &mut dyn Interface,
+    _args: &mut [ZeroCopyBuf],
+) -> Op {
+    let id = get_arg_u32(_args, 0).unwrap();
+    let opacity = get_arg_f32(_args, 1).unwrap();
+    let blend: JsonBlendMode = deno_core::serde_json::from_str(get_arg_str(_args, 2).unwrap()).unwrap();
+    TARGETS.with(|map| {
+        if let Some(target) = map.borrow_mut().get_mut(&id) {
+            target.push_layer_with_blend(opacity, blend_from_json(blend));
+            let res= b"0";
             Op::Sync(res.to_vec().into_boxed_slice())
         } else { let res= b"1"; Op::Sync(res.to_vec().into_boxed_slice()) }
     })

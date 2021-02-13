@@ -31,6 +31,37 @@ export enum LineJoin {
   Bevel = "Bevel",
 }
 
+export enum BlendMode {
+  Dst = "Dst",
+  Src = "Src",
+  Clear = "Clear",
+  SrcOver = "SrcOver",
+  DstOver = "DstOver",
+  SrcIn = "SrcIn",
+  DstIn = "DstIn",
+  SrcOut = "SrcOut",
+  DstOut = "DstOut",
+  SrcAtop = "SrcAtop",
+  DstAtop = "DstAtop",
+  Xor = "Xor",
+  Add = "Add",
+  Screen = "Screen",
+  Overlay = "Overlay",
+  Darken = "Darken",
+  Lighten = "Lighten",
+  ColorDodge = "ColorDodge",
+  ColorBurn = "ColorBurn",
+  HardLight = "HardLight",
+  SoftLight = "SoftLight",
+  Difference = "Difference",
+  Exclusion = "Exclusion",
+  Multiply = "Multiply",
+  Hue = "Hue",
+  Saturation = "Saturation",
+  Color = "Color",
+  Luminosity = "Luminostiy",
+}
+
 export interface Color {
   r: number;
   g: number;

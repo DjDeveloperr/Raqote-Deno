@@ -6,6 +6,12 @@ import {
   dt_fill,
   dt_fill_rect,
   dt_get_data,
+  dt_pop_clip,
+  dt_pop_layer,
+  dt_push_clip,
+  dt_push_clip_rect,
+  dt_push_layer,
+  dt_push_layer_with_blend,
   dt_set_transform,
   dt_stroke,
   dt_write_png,
@@ -18,6 +24,7 @@ import {
   Path,
   GradientStop,
   Spread,
+  BlendMode,
 } from "./types.ts";
 
 const DRAW_TARGETS = new Set<number>();
@@ -128,6 +135,52 @@ export class DrawTarget {
     if (!done) throw new Error("Failed to setTransform");
     return this;
   }
+
+  pushLayer(opacity: number): DrawTarget {
+    if (!dt_push_layer(this.id, opacity))
+      throw new Error("Failed to pushLayer");
+    return this;
+  }
+
+  pushLayerWithBlend(opacity: number, blend: BlendMode): DrawTarget {
+    if (!dt_push_layer_with_blend(this.id, opacity, blend))
+      throw new Error("Failed to pushLayerWithBlend");
+    return this;
+  }
+
+  popLayer(): DrawTarget {
+    if (!dt_pop_layer(this.id)) throw new Error("Failed to popLayer");
+    return this;
+  }
+
+  pushClip(path: PathData | PathBuilder) {
+    if (!dt_push_clip(this.id, path)) throw new Error("Failed to pushClip");
+  }
+
+  pushClipRect(rect: IntRect) {
+    if (!dt_push_clip_rect(this.id, ...rect.toArray()))
+      throw new Error("Failed to pushClipRect");
+    return this;
+  }
+
+  popClip() {
+    if (!dt_pop_clip(this.id)) throw new Error("Failed to popClip");
+    return this;
+  }
+}
+
+export class IntRect {
+  p1: Point;
+  p2: Point;
+
+  constructor(p1: Point, p2: Point) {
+    this.p1 = p1;
+    this.p2 = p2;
+  }
+
+  toArray(): [number, number, number, number] {
+    return [...this.p1.toArray(), ...this.p1.toArray()];
+  }
 }
 
 export class Image {
@@ -221,7 +274,7 @@ export class Point {
     this.y = y;
   }
 
-  toArray() {
+  toArray(): [number, number] {
     return [this.x, this.y];
   }
 }

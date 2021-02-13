@@ -1,4 +1,4 @@
-import { PathData, ISource, Spread, StrokeStyle } from "./types.ts";
+import { PathData, ISource, Spread, StrokeStyle, BlendMode } from "./types.ts";
 
 export const pluginID = Deno.openPlugin("../target/debug/raqote_deno.dll");
 export const {
@@ -16,6 +16,12 @@ export const {
   op_dt_draw_image_with_size_at,
   op_dt_destroy,
   op_dt_set_transform,
+  op_dt_push_layer,
+  op_dt_pop_layer,
+  op_dt_push_layer_with_blend,
+  op_dt_pop_clip,
+  op_dt_push_clip,
+  op_dt_push_clip_rect,
 } = (Deno as any).core.ops() as { [name: string]: number };
 
 export const encoder = new TextEncoder();
@@ -183,4 +189,38 @@ export function dt_set_transform(
     dispatch_data(op_dt_set_transform, id, rc, m11, m21, m31, m12, m22, m32) ==
     "0"
   );
+}
+
+export function dt_push_layer(id: number, opacity: number) {
+  return dispatch_data(op_dt_push_layer, id, opacity) == "0";
+}
+
+export function dt_push_layer_with_blend(
+  id: number,
+  opacity: number,
+  blend: BlendMode
+) {
+  return dispatch_data(op_dt_push_layer_with_blend, id, opacity, blend) == "0";
+}
+
+export function dt_push_clip(id: number, path: PathData) {
+  return dispatch_data(op_dt_pop_clip, id, _fix_path(path)) == "0";
+}
+
+export function dt_push_clip_rect(
+  id: number,
+  x1: number,
+  y1: number,
+  x2: number,
+  y2: number
+) {
+  return dispatch_data(op_dt_push_clip_rect, id, x1, y1, x2, y2) == "0";
+}
+
+export function dt_pop_clip(id: number) {
+  return dispatch_data(op_dt_pop_clip, id) == "0";
+}
+
+export function dt_pop_layer(id: number) {
+  return dispatch_data(op_dt_pop_layer, id) == "0";
 }
