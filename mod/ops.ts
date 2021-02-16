@@ -1,6 +1,21 @@
+import { Plug } from "https://deno.land/x/plug@0.2.7/mod.ts";
 import { PathData, ISource, Spread, StrokeStyle, BlendMode } from "./types.ts";
 
-export const pluginID = Deno.openPlugin("../target/debug/raqote_deno.dll");
+const VERSION = "0.0.1";
+const POLICY =
+  Deno.env.get("PLUGIN_URL") === undefined
+    ? Plug.CachePolicy.STORE
+    : Plug.CachePolicy.NONE;
+const PLUGIN_URL =
+  Deno.env.get("PLUGIN_URL") ??
+  `https://github.com/DjDeveloperr/Raqote-Deno/releases/download/${VERSION}/`;
+
+await Plug.prepare({
+  name: "raqote_deno",
+  url: PLUGIN_URL,
+  policy: POLICY,
+});
+
 export const {
   op_new_draw_target,
   op_dt_get_data,

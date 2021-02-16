@@ -1,6 +1,7 @@
 import {
   draw_image_at,
   draw_image_with_size_at,
+  dt_clear,
   dt_destroy,
   dt_encode,
   dt_fill,
@@ -38,9 +39,9 @@ function getNewID() {
 }
 
 export class DrawTarget {
-  id: number;
-  height: number;
-  width: number;
+  readonly id: number;
+  readonly height: number;
+  readonly width: number;
 
   constructor(width: number, height: number) {
     this.id = getNewID();
@@ -81,6 +82,12 @@ export class DrawTarget {
     if (path instanceof PathBuilder) path = path.finish();
     if (!dt_stroke(this.id, path, stroke, src))
       throw new Error("Failed to stroke");
+    return this;
+  }
+
+  clear(color: Color): DrawTarget {
+    if (!dt_clear(this.id, color.a, color.r, color.g, color.b))
+      throw new Error("Failed to clear");
     return this;
   }
 
