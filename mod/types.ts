@@ -62,7 +62,7 @@ export enum BlendMode {
   Luminosity = "Luminostiy",
 }
 
-export interface Color {
+export interface IColor {
   r: number;
   g: number;
   b: number;
@@ -71,16 +71,16 @@ export interface Color {
 
 export interface GradientStop {
   position: number;
-  color: Color;
+  color: IColor;
 }
 
-export interface Gradient {
+export interface IGradient {
   stops: GradientStop[];
 }
 
 export interface ISource {
   src_type: SourceType;
-  color?: Color | null;
+  color?: IColor | null;
   start?: number[] | null;
   end?: number[] | null;
   center?: number[] | null;
@@ -88,7 +88,7 @@ export interface ISource {
   center2?: number[] | null;
   radius2?: number | null;
   spread?: Spread | null;
-  gradient?: Gradient | null;
+  gradient?: IGradient | null;
 }
 
 export interface Path {

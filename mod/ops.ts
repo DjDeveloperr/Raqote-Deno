@@ -1,7 +1,7 @@
-import { Plug } from "https://deno.land/x/plug@0.2.7/mod.ts";
+import { Plug } from "https://deno.land/x/plug@0.2.10/mod.ts";
 import { PathData, ISource, Spread, StrokeStyle, BlendMode } from "./types.ts";
 
-const VERSION = "0.0.1";
+const VERSION = "0.0.2";
 const POLICY =
   Deno.env.get("PLUGIN_URL") === undefined
     ? Plug.CachePolicy.STORE
