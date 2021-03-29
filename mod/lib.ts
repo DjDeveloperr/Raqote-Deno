@@ -295,7 +295,7 @@ export class Source {
   }
 
   static createRadialGradient(
-    stops: GradientStop[],
+    stops: GradientStop[] | Gradient,
     center: Point,
     radius: number,
     spread: Spread
@@ -303,7 +303,7 @@ export class Source {
     return {
       src_type: "RadialGradient",
       gradient: {
-        stops,
+        stops: stops instanceof Gradient ? stops.stops : stops,
       },
       center: center.toArray(),
       radius,
